@@ -41,26 +41,31 @@ def closePPPD():
 
 # Check for a GPS fix
 def checkForFix():
+	sleep(5)
 	print "checking for fix"
 	# Start the serial connection
 	ser=serial.Serial('/dev/serial0', 115200, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=1)
 	# Turn on the GPS
+	ser.write("AT+CGPS=0,1\r")
+	sleep(2)
 	ser.write("AT+CGPS=1,1\r")
 	while True:
 		response = ser.readline()
-		if " 1" in response:
+		print response
+		if "OK" in response:
 			break
+
 	# Ask for the navigation info parsed from NMEA sentences
 	ser.write("AT+CGPS?\r")
 	while True:
 			response = ser.readline()
 			# Check if a fix was found
-			if "+CGPS: 1,1," in response:
+			if "+CGPS: 1,1" in response:
 				print "fix found"
 				print response
 				return True
 			# If a fix wasn't found, wait and try again
-			if "+CGPSINFO: 1,0," in response:
+			if "+CGPS: 1,0" in response:
 				sleep(5)
 				ser.write("AT+CGPSINFO?\r")
 				print "still looking for fix"
@@ -109,7 +114,7 @@ if openPPPD():
 					streamer.log("Coordinates",coord)
 					sleep(SECONDS_BETWEEN_READS)
 			# Turn the cellular connection on every 10 reads
-			if i == 9:
+			if i == 10:
 				print "opening connection"
 
 				if openPPPD():
